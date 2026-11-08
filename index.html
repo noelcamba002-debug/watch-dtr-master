@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project W.A.T.C.H. — DTR System</title>
+<meta name="theme-color" content="#003580">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #003580 0%, #0056b3 100%); min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 12px; color: #222; }
+  .app { background: #fff; width: 100%; max-width: 440px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,.3); overflow: hidden; }
+  
+  /* HEADER */
+  .header { background: linear-gradient(135deg, #003580 0%, #0056b3 100%); color: #fff; padding: 12px 12px 10px; position: relative; overflow: hidden; }
+  .header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700); }
+  .header-row { display: flex; align-items: center; gap: 10px; }
+  .logo-slot { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.15); border: 2px solid rgba(255,215,0,.5); display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; overflow: hidden; flex-shrink: 0; }
+  .logo-slot img { width: 100%; height: 100%; object-fit: contain; background: #fff; padding: 3px; }
+  .header-center { flex: 1; text-align: center; min-width: 0; }
+  .header .watch-title { font-size: 15px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #ffd700; }
+  .header .school { font-size: 10px; font-weight: 600; margin-top: 2px; }
+  .header .form-ref { font-size: 9px; opacity: .7; margin-top: 1px; }
+  .header.compact { padding: 8px 12px; }
+  .header.compact .school { font-size: 9px; }
+  
+  /* BODY */
+  .body { padding: 16px; }
+  .clock { text-align: center; font-size: 38px; font-weight: 700; color: #003580; line-height: 1; }
+  .date { text-align: center; font-size: 12px; color: #666; margin: 6px 0 12px; }
+  .status { padding: 10px; border-radius: 10px; font-size: 12px; text-align: center; margin-bottom: 12px; }
+  .status.ok { background: #e6f7ec; color: #0a7b3c; border: 1px solid #b7e4c7; }
+  .status.err { background: #fdecea; color: #b71c1c; border: 1px solid #f5c6cb; }
+  .status.wait { background: #fff8e1; color: #8a6d00; border: 1px solid #ffe082; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  button { padding: 14px 6px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  button:disabled { opacity: .4; }
+  .in { background: #0a7b3c; color: #fff; } .out { background: #c62828; color: #fff; } .full { grid-column: span 2; background: #003580; color: #fff; }
+  
+  /* LOGIN */
+  .login-screen { padding: 20px; }
+  .login-screen h2 { font-size: 18px; text-align: center; color: #003580; margin-bottom: 10px; }
+  .login-screen label { font-size: 11px; font-weight: 700; color: #003580; display: block; margin-bottom: 4px; }
+  .login-screen select, .login-screen input { width: 100%; padding: 12px; border: 2px solid #e0e6ef; border-radius: 8px; font-size: 14px; background: #f7f9fc; margin-bottom: 12px; }
+  .login-screen button { width: 100%; padding: 14px; font-size: 15px; background: #003580; color: #fff; border-radius: 10px; }
+  .logged-as { background: #e8eef7; padding: 10px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; }
+  .logout-btn { background: transparent; color: #c62828; border: 1px solid #f5c6cb; padding: 6px 12px; border-radius: 6px; }
+  
+  /* CREDITS */
+  .credits { margin-top: 15px; padding: 12px; background: #f7f9fc; border: 1px solid #d8e2f0; border-radius: 10px; text-align: center; }
+  .credit-label { font-size: 9px; color: #888; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+  .credit-name { font-size: 12px; font-weight: 700; color: #003580; margin-top: 2px; }
+  .credit-position { font-size: 10px; color: #666; font-style: italic; margin-top: 1px; }
+  .divider-line { height: 1px; background: #d8e2f0; margin: 10px 0; }
+  .version { font-size: 9px; color: #999; margin-top: 10px; }
+  
+  /* MODAL */
+  .modal-bg { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.6); display: none; justify-content: center; align-items: center; z-index: 999; padding: 16px; }
+  .modal-bg.active { display: flex; }
+  .modal { background: #fff; border-radius: 12px; padding: 20px; width: 100%; max-width: 380px; max-height: 90vh; overflow-y: auto; }
+  .modal label { font-size: 11px; font-weight: 700; color: #003580; display: block; margin: 10px 0 4px; }
+  .modal input { width: 100%; padding: 10px; border: 2px solid #e0e6ef; border-radius: 8px; font-size: 13px; background: #f7f9fc; margin-bottom: 8px; }
+  .modal .row-btns { display: flex; gap: 8px; margin-top: 15px; }
+  .modal .row-btns button { flex: 1; padding: 12px; border-radius: 8px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="hidden">
+    <div class="header">
+      <div class="header-row">
+        <div class="logo-slot"><img id="depedLogoMain" style="display:none;"></div>
+        <div class="header-center">
+          <div class="watch-title">Project W.A.T.C.H.</div>
+          <div class="school school-name">School DTR System</div>
+          <div class="form-ref school-id">School ID: ...</div>
+        </div>
+        <div class="logo-slot"><img id="schoolLogoMain" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="login-screen">
+      <h2>Teacher Login</h2>
+      
+      <!-- SCHOOL CODE -->
+      <div style="background:#f0f4f8; padding:12px; border-radius:8px; border:1px dashed #4A6FA5; margin-bottom: 15px;">
+        <label>School Code</label>
+        <input type="text" id="schoolCodeInput" placeholder="e.g., ANGELA-2026" style="text-transform: uppercase; margin-bottom: 6px;">
+        <button onclick="saveSchoolCodeAndFetch()" style="padding: 10px; font-size: 13px; background: #4A6FA5; color: #fff; border-radius: 6px;">🔗 Load School</button>
+      </div>
+
+      <label>Pangalan</label>
+      <select id="teacherSelect"><option value="">Mag-load muna ng School Code</option></select>
+      <label>PIN (6 digits)</label>
+      <input type="password" id="pinInput" inputmode="numeric" maxlength="6" placeholder="••••••">
+      <button id="loginBtn">Login</button>
+      <div id="loginError" style="color:#c62828; font-size:12px; text-align:center; margin-top:10px;"></div>
+
+      <!-- CREDITS -->
+      <div class="credits">
+        <div class="credit-row">
+          <div class="credit-label">Lead Proponent</div>
+          <div class="credit-name">RONELYN M. PRODIGO</div>
+          <div class="credit-position">Head Teacher 1 (Angela ES)</div>
+        </div>
+        <div class="divider-line"></div>
+        <div class="credit-row">
+          <div class="credit-label">Developer</div>
+          <div class="credit-name">NOEL D. CAMBA</div>
+          <div class="credit-position">Master Teacher 1</div>
+        </div>
+        <div class="divider-line"></div>
+        <div class="credit-row">
+          <div class="credit-label">Adopted by</div>
+          <div class="credit-name school-name">Loading...</div>
+          <div class="credit-position">School ID: <span class="school-id">...</span></div>
+        </div>
+        <div class="version">v7.0.0 • © 2026 Project W.A.T.C.H. DTR System</div>
+      </div>
+
+      <div style="text-align: center; margin-top: 15px;">
+        <button onclick="openSetupModal()" style="background: transparent; border: none; color: #888; font-size: 11px; cursor: pointer;">⚙️ Developer Setup / Create School</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN DTR SCREEN -->
+  <div id="mainScreen" class="hidden">
+    <div class="header compact">
+      <div class="header-row">
+        <div class="logo-slot"><img id="depedLogoMain2" style="display:none;"></div>
+        <div class="header-center">
+          <div class="watch-title">Project W.A.T.C.H.</div>
+          <div class="school school-name">School Name</div>
+        </div>
+        <div class="logo-slot"><img id="schoolLogoMain2" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="logged-as">
+        <span>👤 <b id="loggedName">—</b></span>
+        <button class="logout-btn" id="logoutBtn">Logout</button>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="date" id="date">Loading…</div>
+      <div class="status wait" id="status">Kinukuha ang lokasyon…</div>
+
+      <div class="grid">
+        <button class="in" id="amIn" disabled>AM IN</button>
+        <button class="out" id="amOut" disabled>AM OUT</button>
+        <button class="in" id="pmIn" disabled>PM IN</button>
+        <button class="out" id="pmOut" disabled>PM OUT</button>
+        <button class="full" id="refresh">↻ Refresh GPS</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP MODAL -->
+<div class="modal-bg" id="setupModal">
+  <div class="modal">
+    <h3>⚙️ School Configuration</h3>
+    <label>Region</label><input type="text" id="setupRegion">
+    <label>Division</label><input type="text" id="setupDivision">
+    <label>District</label><input type="text" id="setupDistrict">
+    <label>School Name</label><input type="text" id="setupSchoolName">
+    <label>School ID</label><input type="text" id="setupSchoolId">
+    <label>Latitude</label><input type="text" id="setupLat">
+    <label>Longitude</label><input type="text" id="setupLng">
+    <label>School Head</label><input type="text" id="setupSchoolHead">
+    <label>Radius (meters)</label><input type="number" id="setupRadius" value="25">
+    
+    <div class="row-btns">
+      <button style="background:#e8eef7; color:#003580;" onclick="document.getElementById('setupModal').classList.remove('active')">Kansel</button>
+      <button style="background:#4A6FA5; color:#fff;" onclick="saveSetup()">I-save</button>
+    </div>
+    
+    <hr style="margin:20px 0; border:none; border-top:1px dashed #ccc;">
+    <h4 style="color:#c62828; font-size:13px;">⚠️ Developer Only</h4>
+    <label>New School Code (Walang Space)</label><input type="text" id="newSchoolCode" style="text-transform: uppercase;">
+    <label>New School Name</label><input type="text" id="newSchoolName">
+    <button style="background:#c62828; color:#fff; width:100%; padding:12px; border-radius:8px; margin-top:10px;" onclick="createNewSchool()">🚀 Create School Database</button>
+  </div>
+</div>
+
+<script>
+  const CONFIG = {
+    // ✅ NAKA-INSERT NA ANG BAGONG WEB APP URL MO
+    API_URL: 'https://script.google.com/macros/s/AKfycbxcQzhswEGbt49RiwN1wTOIvVU4ovE3k9QoiTLO00C6mWghSOHi36zAqK-ppFQM3x8-IQ/exec',
+    SCHOOL_LAT: 0, SCHOOL_LNG: 0, RADIUS_M: 25, MAX_ACCURACY: 50
+  };
+
+  let currentSchoolCode = localStorage.getItem('dtr_school_code') || '';
+  let session = null, currentPos = null, currentDistance = null;
+
+  // 1. API CALL
+  async function apiCall(action, data = {}) {
+    if (!currentSchoolCode && action !== 'createSchool') return { error: 'Kailangan ng School Code.' };
+    try {
+      const res = await fetch(CONFIG.API_URL, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action, schoolCode: currentSchoolCode, ...data })
+      });
+      return await res.json();
+    } catch (e) { return { error: 'Network error: ' + e.message }; }
+  }
+
+  // 2. SCHOOL CODE & FETCH
+  async function saveSchoolCodeAndFetch() {
+    const code = document.getElementById('schoolCodeInput').value.trim().toUpperCase();
+    if (!code) return alert('Maglagay ng School Code.');
+    currentSchoolCode = code;
+    localStorage.setItem('dtr_school_code', currentSchoolCode);
+    await fetchSettings();
+  }
+
+  async function fetchSettings() {
+    if (!currentSchoolCode) return;
+    try {
+      const res = await fetch(CONFIG.API_URL + '?schoolCode=' + currentSchoolCode);
+      const data = await res.json();
+      
+      if (data.settings && !data.error) {
+        CONFIG.SCHOOL_LAT = data.settings.lat;
+        CONFIG.SCHOOL_LNG = data.settings.lng;
+        CONFIG.RADIUS_M = data.settings.radius;
+        updateHeaderUI(data.settings);
+        await loadTeachers();
+      } else {
+        alert(data.error || 'Invalid Code');
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  function updateHeaderUI(settings) {
+    document.querySelectorAll('.school-name').forEach(el => { el.textContent = settings.schoolName; });
+    document.querySelectorAll('.school-id').forEach(el => { el.textContent = settings.schoolId; });
+  }
+
+  // 3. CREATE SCHOOL (Auto-Generate)
+  async function createNewSchool() {
+    const newCode = document.getElementById('newSchoolCode').value.trim().toUpperCase();
+    const newName = document.getElementById('newSchoolName').value.trim();
+    if (!newCode || !newName) return alert('Punan ang Code at Name.');
+    if (!confirm('Gumawa ng bagong database para sa ' + newName + '?')) return;
+
+    const res = await apiCall('createSchool', { newSchoolCode: newCode, newSchoolName: newName });
+    if (res.success) {
+      alert('✅ School Created! \nID: ' + res.spreadsheetId + '\n\nPwede mo nang i-type ang School Code sa Login.');
+      document.getElementById('newSchoolCode').value = '';
+      document.getElementById('newSchoolName').value = '';
+    } else {
+      alert('❌ Error: ' + res.error);
+    }
+  }
+
+  // 4. SETUP MODAL
+  function openSetupModal() {
+    const saved = localStorage.getItem('dtr_settings');
+    if (saved) {
+      const s = JSON.parse(saved);
+      document.getElementById('setupRegion').value = s.region || '';
+      document.getElementById('setupDivision').value = s.division || '';
+      document.getElementById('setupDistrict').value = s.district || '';
+      document.getElementById('setupSchoolName').value = s.schoolName || '';
+      document.getElementById('setupSchoolId').value = s.schoolId || '';
+      document.getElementById('setupLat').value = s.lat || '';
+      document.getElementById('setupLng').value = s.lng || '';
+      document.getElementById('setupSchoolHead').value = s.schoolHead || '';
+      document.getElementById('setupRadius').value = s.radius || 25;
+    }
+    document.getElementById('setupModal').classList.add('active');
+  }
+
+  async function saveSetup() {
+    const settings = {
+      region: document.getElementById('setupRegion').value.trim(),
+      division: document.getElementById('setupDivision').value.trim(),
+      district: document.getElementById('setupDistrict').value.trim(),
+      schoolName: document.getElementById('setupSchoolName').value.trim(),
+      schoolId: document.getElementById('setupSchoolId').value.trim(),
+      lat: parseFloat(document.getElementById('setupLat').value),
+      lng: parseFloat(document.getElementById('setupLng').value),
+      schoolHead: document.getElementById('setupSchoolHead').value.trim(),
+      radius: parseInt(document.getElementById('setupRadius').value) || 25
+    };
+    
+    if (!settings.schoolName || !settings.lat || !settings.lng) return alert('Kailangan ang School Name, Lat, at Lng.');
+
+    localStorage.setItem('dtr_settings', JSON.stringify(settings));
+    await apiCall('saveSettings', settings);
+    updateHeaderUI(settings);
+    CONFIG.SCHOOL_LAT = settings.lat; CONFIG.SCHOOL_LNG = settings.lng;
+    document.getElementById('setupModal').classList.remove('active');
+    alert('✅ Settings updated!');
+  }
+
+  // 5. LOGIN & GEOLOCATION
+  async function loadTeachers() {
+    const select = document.getElementById('teacherSelect');
+    select.innerHTML = '<option value="">⏳ Loading...</option>';
+    const res = await apiCall('getTeachers');
+    if (res.error) { select.innerHTML = '<option value="">' + res.error + '</option>'; return; }
+    select.innerHTML = '<option value="">-- Pumili --</option>' + res.teachers.map(t => `<option value="${t.employeeId}">${t.name}</option>`).join('');
+  }
+
+  async function doLogin() {
+    const employeeId = document.getElementById('teacherSelect').value;
+    const pin = document.getElementById('pinInput').value;
+    const errEl = document.getElementById('loginError');
+    errEl.textContent = '';
+    if (!employeeId || !pin) { errEl.textContent = 'Punan ang pangalan at PIN'; return; }
+
+    const deviceId = getDeviceId();
+    const btn = document.getElementById('loginBtn'); btn.disabled = true; btn.textContent = 'Naglo-login…';
+    const res = await apiCall('login', { employeeId, pin, deviceId });
+    btn.disabled = false; btn.textContent = 'Login';
+    if (res.error) { errEl.textContent = res.error; return; }
+
+    session = { employeeId: res.employeeId, employeeName: res.employeeName };
+    localStorage.setItem('dtr_session', JSON.stringify(session));
+    showMainScreen();
+  }
+
+  function getDeviceId() {
+    let id = localStorage.getItem('watch_device_id');
+    if (!id) { id = 'dev-' + Math.random().toString(36).substring(2, 10); localStorage.setItem('watch_device_id', id); }
+    return id;
+  }
+
+  function showMainScreen() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainScreen').classList.remove('hidden');
+    document.getElementById('loggedName').textContent = session.employeeName;
+    setTimeout(getLocation, 300);
+  }
+
+  function getLocation() {
+    if (!session) return;
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(handlePosition, handleError, { enableHighAccuracy: true, timeout: 15000 });
+  }
+
+  function handlePosition(pos) {
+    currentPos = pos;
+    const dist = haversine(pos.coords.latitude, pos.coords.longitude, CONFIG.SCHOOL_LAT, CONFIG.SCHOOL_LNG);
+    currentDistance = dist;
+    const inside = dist <= CONFIG.RADIUS_M;
+    const accurate = pos.coords.accuracy <= CONFIG.MAX_ACCURACY;
+
+    const statusEl = document.getElementById('status');
+    if (!accurate) { statusEl.className = 'status err'; statusEl.innerHTML = 'Mahina ang GPS signal'; enableButtons(false); return; }
+    if (inside) { statusEl.className = 'status ok'; statusEl.innerHTML = 'Nasa loob ng school'; enableButtons(true); }
+    else { statusEl.className = 'status err'; statusEl.innerHTML = 'Nasa labas ng radius'; enableButtons(false); }
+  }
+
+  function handleError(err) { document.getElementById('status').innerHTML = 'GPS Error'; enableButtons(false); }
+  function enableButtons(enabled) { ['amIn','amOut','pmIn','pmOut'].forEach(id => document.getElementById(id).disabled = !enabled); }
+  function haversine(lat1, lon1, lat2, lon2) { const R=6371000,toRad=d=>d*Math.PI/180; const dLat=toRad(lat2-lat1),dLon=toRad(lon2-lon1); const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2; return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); }
+
+  async function logTime(type) {
+    if (!currentPos) return;
+    enableButtons(false);
+    document.getElementById('status').className = 'status wait'; document.getElementById('status').innerHTML = 'Nag-log...';
+    const res = await apiCall('logTime', {
+      employeeId: session.employeeId, employeeName: session.employeeName, type: type,
+      timestamp: new Date().toISOString(), lat: currentPos.coords.latitude, lng: currentPos.coords.longitude,
+      accuracy: currentPos.coords.accuracy, distance: currentDistance, deviceId: getDeviceId()
+    });
+    if (res.error) { document.getElementById('status').className = 'status err'; document.getElementById('status').innerHTML = res.error; enableButtons(true); }
+    else { document.getElementById('status').className = 'status ok'; document.getElementById('status').innerHTML = '✓ Naitala ang ' + type; }
+    setTimeout(getLocation, 2000);
+  }
+
+  function tickClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-PH', { hour12: true }); }
+  setInterval(tickClock, 1000); tickClock();
+
+  // INIT
+  window.onload = async () => {
+    if (currentSchoolCode) {
+      document.getElementById('schoolCodeInput').value = currentSchoolCode;
+      await fetchSettings();
+      const savedSession = localStorage.getItem('dtr_session');
+      if (savedSession) { session = JSON.parse(savedSession); showMainScreen(); }
+      else document.getElementById('loginScreen').classList.remove('hidden');
+    } else { document.getElementById('loginScreen').classList.remove('hidden'); }
+    
+    document.getElementById('loginBtn').onclick = doLogin;
+    document.getElementById('logoutBtn').onclick = () => { localStorage.removeItem('dtr_session'); session = null; location.reload(); };
+    document.getElementById('refresh').onclick = getLocation;
+    document.getElementById('amIn').onclick = () => logTime('AM_IN');
+    document.getElementById('amOut').onclick = () => logTime('AM_OUT');
+    document.getElementById('pmIn').onclick = () => logTime('PM_IN');
+    document.getElementById('pmOut').onclick = () => logTime('PM_OUT');
+  };
+</script>
+</body>
+</html>

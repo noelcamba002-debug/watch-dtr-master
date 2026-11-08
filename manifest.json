@@ -1,0 +1,49 @@
+{
+  "name": "Project W.A.T.C.H. — DTR System",
+  "short_name": "W.A.T.C.H. DTR",
+  "description": "Daily Time Record System. We Advocate Time Consciousness and Honesty.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#003580",
+  "theme_color": "#003580",
+  "lang": "en-PH",
+  "dir": "ltr",
+  "categories": ["education", "productivity", "government"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mag-log ng Time",
+      "short_name": "Log",
+      "description": "Buksan ang DTR app para mag-log",
+      "url": "/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
